@@ -1,0 +1,5 @@
+Resources:
+  CodeS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: flask-app-cicd-bucket-arongeerts

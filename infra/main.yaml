@@ -1,0 +1,275 @@
+Resources:
+
+  ECRRepo:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: flask-hello-app
+      Tags:
+        - Key: project
+          Value: flask-hello-app
+
+  CodeCommitRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryDescription: An example project to use as a demo to show how CI/CD can work in the AWS stack
+      RepositoryName: cicd-in-aws
+      Code:
+        S3:
+          Bucket: flask-app-cicd-bucket-arongeerts
+          Key: repo-contents.zip
+      Tags:
+        - Key: project
+          Value: flask-hello-app
+    DependsOn: ECRRepo
+
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: FlaskHelloAppBuild
+      Artifacts:
+        Name: flask-hello-app-build
+        Type: CODEPIPELINE
+      Description: Code build project that builds the docker image for flask-hello-app and pushes to ECR
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:2.0
+        PrivilegedMode: true
+      ServiceRole:
+        Ref: CodeBuildRole
+      Source:
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 10
+      Tags:
+        - Key: project
+          Value: flask-hello-app
+
+  DeploymentPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: flask-hello-deployment
+      RoleArn:
+        Fn::GetAtt:
+          - CodePipelineRole
+          - Arn
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: CheckoutSource
+              InputArtifacts: []
+              ActionTypeId:
+                Version: '1'
+                Category: Source
+                Owner: AWS
+                Provider: CodeCommit
+              OutputArtifacts:
+                - Name: flask-hello-code-artifact
+              Configuration:
+                RepositoryName: cicd-in-aws
+                BranchName: master
+                PollForSourceChanges: false
+              RunOrder: 1
+        - Name: Build
+          Actions:
+            - Name: ImageBuild
+              InputArtifacts:
+                - Name: flask-hello-code-artifact
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: '1'
+                Provider: CodeBuild
+              OutputArtifacts:
+                - Name: flask-hello-build-artifact
+              Configuration:
+                ProjectName: FlaskHelloAppBuild
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: ContainerDeploy
+              InputArtifacts:
+                - Name: flask-hello-build-artifact
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: '1'
+                Provider: ECS
+              Configuration:
+                ClusterName: FargateCluster
+                ServiceName: FargateService
+
+              RunOrder: 1
+      ArtifactStore:
+        Type: S3
+        Location: flask-app-cicd-bucket-arongeerts
+
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Sid: '1'
+          Effect: Allow
+          Principal:
+            Service:
+            - codepipeline.amazonaws.com
+          Action: 'sts:AssumeRole'
+      Path: "/"
+      Policies:
+        - PolicyName: AccessCodeCommitFlaskCICD
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: codecommit:*
+                Resource:
+                  Fn::GetAtt:
+                    - CodeCommitRepo
+                    - Arn
+        - PolicyName: AccessCodeBuildFlaskCICD
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: codebuild:*
+                Resource:
+                  Fn::GetAtt:
+                    - CodeBuildProject
+                    - Arn
+        - PolicyName: AccessCodeDeployFlaskCICD
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: codedeploy:*
+                Resource: "*"
+        - PolicyName: AccessS3ArtifactsBucketFlaskCICD
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: s3:*
+                Resource: "*"
+        - PolicyName: AccessECRRepoFlaskCICD
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: ecr:*
+                Resource:
+                  Fn::GetAtt:
+                    - ECRRepo
+                    - Arn
+        - PolicyName: AccessECS
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: ecs:*
+                Resource: "*"
+        - PolicyName: PassIAMRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: "*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: FargateCluster
+
+  ECSFargateService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: FargateService
+      Cluster:
+        Ref: ECSCluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      TaskDefinition:
+        Ref: ECSTask
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets:
+            - subnet-fd5330b5
+
+  ECSTask:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Name: flask-hello-container
+          Image:
+            Ref: ECRRepo
+          Essential: true
+          PortMappings:
+            - HostPort: 5000
+              Protocol: TCP
+              ContainerPort: 5000
+      Cpu: 256
+      ExecutionRoleArn:
+        Ref: FargateRole
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+       - FARGATE
+      Tags:
+        - Key: project
+          Value: flask-hello-app
+      TaskRoleArn:
+        Fn::GetAtt:
+          - FargateRole
+          - Arn
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Sid: '1'
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: CodeBuildPolicy
+          PolicyDocument:
+            Statement:
+              - Action:
+                - codepipeline:*
+                - codedeploy:*
+                - cloudwatch:*
+                - logs:*
+                - ecr:*
+                - codecommit:*
+                - s3:*
+                Resource: "*"
+                Effect: Allow
+
+  FargateRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Sid: '1'
+            Effect: Allow
+            Principal:
+              Service:
+                - ecs.amazonaws.com
+                - ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: PullECR
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+                - Effect: Allow
+                  Action: ecr:*
+                  Resource: "*"
