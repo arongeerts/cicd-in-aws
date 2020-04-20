@@ -1,5 +1,19 @@
-Resources:
+Parameters:
+  VpcId:
+    Type: String
+    Default: vpc-2b5c7a4d
+    Description: The VPC to deploy the app to
+  ServicePort:
+    Type: Number
+    Default: 5000
+  ServiceName:
+    Type: String
+    Default: FlaskHello
+  BucketName:
+    Type: String
+    Default: flask-app-cicd-bucket-arongeerts
 
+Resources:
   ECRRepo:
     Type: AWS::ECR::Repository
     Properties:
@@ -15,7 +29,7 @@ Resources:
       RepositoryName: cicd-in-aws
       Code:
         S3:
-          Bucket: flask-app-cicd-bucket-arongeerts
+          Bucket: !Ref BucketName
           Key: repo-contents.zip
       Tags:
         - Key: project
@@ -96,7 +110,7 @@ Resources:
                 Provider: ECS
               Configuration:
                 ClusterName: FargateCluster
-                ServiceName: FargateService
+                ServiceName: !Ref ServiceName
 
               RunOrder: 1
       ArtifactStore:
@@ -184,32 +198,39 @@ Resources:
 
   ECSFargateService:
     Type: AWS::ECS::Service
+    DependsOn: Listener
     Properties:
-      ServiceName: FargateService
+      ServiceName: !Ref ServiceName
       Cluster:
         Ref: ECSCluster
-      DesiredCount: 1
+      DesiredCount: 0
       LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: !Ref ServiceName
+          ContainerPort: !Ref ServicePort
+          TargetGroupArn: !Ref TargetGroup
       TaskDefinition:
         Ref: ECSTask
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           Subnets:
-            - subnet-fd5330b5
+            - Ref: AppSubnet
+          SecurityGroups:
+            - Ref: FlaskSecurityGroup
 
   ECSTask:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
-        - Name: flask-hello-container
+        - Name: !Ref ServiceName
           Image:
             Ref: ECRRepo
           Essential: true
           PortMappings:
-            - HostPort: 5000
+            - HostPort: !Ref ServicePort
               Protocol: TCP
-              ContainerPort: 5000
+              ContainerPort: !Ref ServicePort
       Cpu: 256
       ExecutionRoleArn:
         Ref: FargateRole
@@ -273,3 +294,71 @@ Resources:
                 - Effect: Allow
                   Action: ecr:*
                   Resource: "*"
+
+  AppSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 172.31.48.0/28
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: project
+          Value: flask-hello-app
+      VpcId:
+        Ref: VpcId
+
+
+  FlaskSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Flask app Security Group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref ServicePort
+          ToPort: !Ref ServicePort
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      VpcId:
+        Ref: VpcId
+
+  ServiceNLB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      IpAddressType: ipv4
+      Name: ServiceLB
+      Scheme: internet-facing
+      Subnets:
+        - Ref: AppSubnet
+      Type: network
+
+
+  TargetGroup:
+      Type: AWS::ElasticLoadBalancingV2::TargetGroup
+      Properties:
+        Name: !Join ['', [!Ref ServiceName, TargetGroup]]
+        Port: !Ref ServicePort
+        Protocol: TCP
+        TargetType: ip
+        VpcId: !Ref VpcId
+
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref ServiceNLB
+      Port: 80
+      Protocol: TCP
+
+Outputs:
+  AppDNS:
+    Description: The url to reach the load balancer in front of the app
+    Value:
+      Fn::GetAtt:
+        - ServiceNLB
+        - DNSName
+    Export:
+      Name: dns

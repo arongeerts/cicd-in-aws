@@ -1,5 +1,11 @@
+Parameters:
+  BucketName:
+    Type: String
+    Default: flask-app-cicd-bucket-arongeerts
+    Description: The Bucket name
+
 Resources:
   CodeS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: flask-app-cicd-bucket-arongeerts
+      BucketName: !Ref BucketName
