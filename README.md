@@ -1,10 +1,10 @@
 # <img src="./docs/icons/aws.png" width="30px"/> DevOps on AWS
 This project attempts to give theoretical and practical experience in DevOps in AWS-oriented projects. 
 It consists of four major parts:
-* An [introduction section](intro), where we will discuss what DevOps means in this context. 
-* A [theory](theory) section, where you can find more information on the concepts that are used in this project.
-* Discussion of the [practical example](example) that this repository holds and that you can play around with.
-* A [demo](demo) section, that allows you to follow the practical example without doing the setup yourself.
+* An [introduction section](#intro), where we will discuss what DevOps means in this context. 
+* A [theory](#theory) section, where you can find more information on the concepts that are used in this project.
+* Discussion of the [practical example](#example) that this repository holds and that you can play around with.
+* A [demo](#demo) section, that allows you to follow the practical example without doing the setup yourself.
 
 <a name="intro"></a>
 ## <img src="./docs/icons/question.png" width="30px"/> What is DevOps?
@@ -21,9 +21,9 @@ In this project, we will interpret DevOps as:
 
 In this project, we will create an example where CodePipeline deploys a Docker container to ECS Fargate. 
 This repo is intended to be used for learning purposes. By this repo, we try to teach about three things:
-* [**IaC**](iac): Infrastructure as code with AWS CloudFormation
-* [**Docker**](docker): This project runs a Dockerized Flask application
-* [**CI/CD**](cicd): In this project, an AWS CodePipeline is created which takes care of the entire release cycle.
+* [**IaC**](#iac): Infrastructure as code with AWS CloudFormation
+* [**Docker**](#docker): This project runs a Dockerized Flask application
+* [**CI/CD**](#cicd): In this project, an AWS CodePipeline is created which takes care of the entire release cycle.
 From the source code, this pipeline will build a Docker image, push it to AWS ECR and deploy an ECS Service running on Fargate.
 This container will be reachable from the public internet and can be used to verify the setup.
 
