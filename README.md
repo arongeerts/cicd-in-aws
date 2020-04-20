@@ -59,10 +59,7 @@ You can overwrite some parameters as environment variable using the `-e` flag.
 ```bazaar
 docker build -t demo . && docker run -e BUCKET_NAME=my-bucket -e VPC_ID=my-vpc -e REGION=eu-west-1 demo       # Run the setup!
 ```
-An executable for deleting the stack is also available.
-```bazaar
-./bin/teardown  # Delete the stack
-```
+
 
 #### Components
 This setup contains a number of resources, which make up both the application stack, infrastructure and deployment resources.
