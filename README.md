@@ -329,7 +329,7 @@ This repository can be ran with Docker, more on Docker below!.
 This script will walk you through the different steps in the process as well as explaining these steps.
 You can overwrite some parameters as environment variable using the `-e` flag.
 ```bazaar
-docker build -t demo . && docker run -e BUCKET_NAME=my-bucket -e VPC_ID=my-vpc -e REGION=eu-west-1 demo       # Run the setup!
+docker build -t demo . && docker run -v ~/.aws/credentials:/root/aws/credentials -e BUCKET_NAME=my-bucket -e VPC_ID=my-vpc -e REGION=eu-west-1 demo       # Run the setup!
 ```
 
 
@@ -354,12 +354,13 @@ In a picture, this is on a high level the layout of the stack:
 
 <a name="demo"></a>
 ## <img src="./docs/icons/demo.png" width="30px"/> Demo
-This section shows what this project hahs to offer you, in case you are not interested in setting it up yourself. It will walk you through a demo using screenshots.
+This section shows what this project has to offer you, in case you are not interested in setting it up yourself. It will walk you through a demo using screenshots.
 
 ### Setting up the stack
 When you build and run the Dockerfile in this project, a container will create a CloudFormation stack for you. 
 In the AWS console, you can monitor the resource creation of this stack. In total, you will get two stacks, one for an initial bucket, which is needed for artifacts in the second stack.
 It will look something like this:
+
 ![CloudFormation console](./docs/cloudformation_stack.png)
 
 The console will show you all created resources with their current status. If everything goes well, all resources will be in the CREATE_COMPLETE state. 
@@ -368,10 +369,13 @@ This section will show parameters that are a result of the stack creation. The E
 
 In the list of resources, the most interesting ones we will look at are the CodeCommit repo, CodePipeline pipeline and the FargateService.
 If you navigate to AWS CodeCommit in the AWS Console, you will find a repository there with the application code in there.
+
 ![CodeCommit repo](./docs/codecommit_repo.png)
 
 When CloudFormation creates a CodePipeline, it will start an initial run based on the initial commit in the CodeCommit repository. In the Console, you can see this if you go to AWS CodePipeline.
+
 ![CodePipeline](./docs/codepipeline.png)
+
 In the notes of the different stages, you can see that the execution is built based on the Initial commit by AWS CodeCommit. 
 The initial execution has gone through the 'Build' stage, which has built a Docker image and stored it to Amazon ECR. We will look at it later. 
 Also, it has deployed this release to AWS Fargate. Now everything is ready for us to run the application!
@@ -380,9 +384,11 @@ Also, it has deployed this release to AWS Fargate. Now everything is ready for u
 In AWS Fargate, you can choose how many replica's of your container you want to run in the service. 
 Fargate will try to make sure that this number is respected, even if containers fail etc. Go to AWS ECS in the console and you will find a section called Clusters.
 There you will see a FargateCluster defined. In the services tab, a service will be defined that will run our application.
+
 ![Fargate cluster](./docs/fargate_cluster.png)
 
 The service now has a desired count of 0 running tasks. If we click edit on the service, we can set this to any number we want. This is a one time activity to get the service started<sup>*</sup>.
+
 ![Edit Fargate service](./docs/edit_count_fargate_service.png)
 
 <sup>*</sup>The desired count of tasks can also be set from CloudFormation. However, because the docker image that is used for the service does not exist at the moment of creating the service,
@@ -391,25 +397,30 @@ the service can never start to run a container. Due to this, the FargateService 
 ### Check out the application
 When the tasks in the Fargate service reach the RUNNING state, the application is online! Go to the hostname of the ELB (which you can find in the outputs of the CloudFormation stack) and see the application.
 (NB: The first time, the ELB might time out. Refresh a couple of times and it will come alive)
+
 ![The application](./docs/app_stage_1.png)
 
 ### CI/CD in action
 Now let's move to the beautiful part of this setup. Let us make a change to the application and see the CI/CD pipeline practice its magic.
 Go to CodeCommit and change the application. You can do this in your browser, or clone the repository and push with Git. In this example, we will add a simple feature, that asks the user how he is doing.
+
 ![Changing the application](./docs/code_commit_change.png)
 
 Next step is to trigger the CodePipeline to release a new change. You could also configure the pipeline to listen to commits automatically. For the sake of this demo, we will let you trigger it yourself.
 In AWS CodePipeline, click 'Release Change'. CodePipeline will start a new execution. On the stages, it will show you the commit that it is using to build the new artifacts.
+
 ![Trigger the pipeline](./docs/pipeline_new_commit.png)
 
 The Build stage of the pipeline will push a new image to Amazon ECR. This will be the new image that we have to run our application from. 
 If you go to AWS ECR in the console, you will see two images, the initial one with the old version of the code, and the new one.
+
 ![AWS ECR](./docs/ecr_repo.jpg)
 
 The Deploy stage will start a new task on AWS ECS Fargate, that will gradually take over from the old version. 
 For a while, you will have two versions of your app running, after which the new one will take over, and the old one will be stopped.
 In the console, you can see this in AWS ECS, on your Fargate service in the `Tasks` tab.
 Fargate will automatically decommission the old tasks once your new one is online. If you see that this happened, refresh the tab with the ELB and see the new version of your app!
+
 ![The updated application](./docs/app_stage_2.png)
 
 That's it! You now have a complete CI/CD pipeline using nothing but AWS tools that allows you to bring new versions of your application to production. 
