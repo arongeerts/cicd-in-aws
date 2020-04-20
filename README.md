@@ -1,7 +1,7 @@
-# <img src="./docs/icons/aws.png" width="50px"/>DevOps on AWS
+# <img src="./docs/icons/aws.png" width="30px"/> DevOps on AWS
 This project attempts to give theoretical and practical experience in DevOps in AWS-oriented projects.
 
-## What is DevOps?
+## <img src="./docs/icons/question.png" width="30px"/> What is DevOps?
 ##### Definition (From [Wikipedia, 2020](https://en.wikipedia.org/wiki/DevOps))
 > DevOps is a set of practices that combines software development (Dev) and information-technology operations (Ops) which aims to **shorten the systems development life cycle** and provide **continuous delivery with high software quality**
 
@@ -21,12 +21,12 @@ This repo is intended to be used for learning purposes. By this repo, we try to 
 From the source code, this pipeline will build a Docker image, push it to AWS ECR and deploy an ECS Service running on Fargate.
 This container will be reachable from the public internet and can be used to verify the setup.
 
-## How to use this repository
+## <img src="./docs/icons/howto.png" width="30px"/> How to use this repository
 
 This project contains an actual setup of AWS infrastructure. 
 It holds code to do a real cloud setup, as well as information about the concepts that are thought
 
-### Project layout
+### <img src="./docs/icons/tree.jpeg" width="30px"/> Project layout
 ```bazaar
 +-- bin                      # Folder that holds executables
 |    +-- run                    # Script to run the setup
@@ -43,7 +43,7 @@ It holds code to do a real cloud setup, as well as information about the concept
 +-- README.md
 ```
 
-### Setting up the services
+### <img src="./docs/icons/setup.png" width="30px"/> Setting up the services
 This section discusses the cloud setup that is used as teaching material.
 
 #### Prerequisites
@@ -80,7 +80,7 @@ You will get:
 In a picture, this is on a high level the layout of the stack:
 ![Architecture overview](docs/architecture.png)
 
-## Theory
+## <img src="./docs/icons/theory.png" width="30px"/> Theory
 
 This section will discuss the theory behind the core concepts that we want to discuss:
 * Infrastructure as Code
@@ -88,7 +88,7 @@ This section will discuss the theory behind the core concepts that we want to di
 * Continuous Integration / Continuous Deployment
 
 
-### Infrastructure as code
+### <img src="./docs/icons/cf.png" width="30px"/> Infrastructure as code
 
 ##### How to create AWS resources?
 There are numerous ways to create a simple AWS resource like an S3 bucket:
@@ -248,7 +248,7 @@ Resources:
 }
 ```
 
-### Docker
+### <img src="./docs/icons/docker.png" width="30px"/> Docker
 This section explains the theory behind Docker and how it works in practice
 
 ##### Problem statement
@@ -320,7 +320,7 @@ Each image is a different version of the application and can be distinguished by
 * Download an image: `docker pull registry/repository:tag`
 * Push an image to a registry: `docker push registry/repository:tag`
 
-### CI/CD
+### <img src="./docs/icons/pipeline.png" width="30px"/> CI/CD
 By Continuous Integration / Continuous deployment, we try to shorten the time that a new feature can be brought to production. 
 This process often goes together with software versioning, automated testing release management... 
 In this project we take the simple example of building the Docker image from the source code and deploying it to AWS ECS.
@@ -343,7 +343,7 @@ Common steps are:
 * AWS CodePipeline: Orchestration service to manage the above services
 
 
-## Demo
+## <img src="./docs/icons/demo.png" width="30px"/> Demo
 This section shows what this project hahs to offer you, in case you are not interested in setting it up yourself. It will walk you through a demo using screenshots.
 
 ### Setting up the stack
