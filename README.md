@@ -2,8 +2,8 @@
 This project attempts to give theoretical and practical experience in DevOps in AWS-oriented projects. 
 It consists of four major parts:
 * An [introduction section](intro), where we will discuss what DevOps means in this context. 
-* Discussion of the [practical example](example) that this repository holds and that you can play around with.
 * A [theory](theory) section, where you can find more information on the concepts that are used in this project.
+* Discussion of the [practical example](example) that this repository holds and that you can play around with.
 * A [demo](demo) section, that allows you to follow the practical example without doing the setup yourself.
 
 <a name="intro"></a>
@@ -26,66 +26,6 @@ This repo is intended to be used for learning purposes. By this repo, we try to 
 * [**CI/CD**](cicd): In this project, an AWS CodePipeline is created which takes care of the entire release cycle.
 From the source code, this pipeline will build a Docker image, push it to AWS ECR and deploy an ECS Service running on Fargate.
 This container will be reachable from the public internet and can be used to verify the setup.
-
-<a name="example"></a>
-## <img src="./docs/icons/howto.png" width="30px"/> How to use this repository
-
-This project contains an actual setup of AWS infrastructure. 
-It holds code to do a real cloud setup, as well as information about the concepts that are thought
-
-### <img src="./docs/icons/tree.jpeg" width="30px"/> Project layout
-```bazaar
-+-- bin                      # Folder that holds executables
-|    +-- run                    # Script to run the setup
-|    +-- teardown               # Script to cleanup AWS resources
-+-- code                     # The code of the actual application
-|    +-- api.py                 # The code for the Flask API
-|    +-- buildspec.yml          # The build specifications used by AWS CodeBuild
-|    +-- Dockerfile             # Dockerfile used for the Flask Application
-|    +-- requirements.txt       # Python dependency file
-+-- infra                    # AWS CloudFormation scripts (IaC)
-|    +-- bucket.yaml            # Template for the initial bucket used by AWS Cloudformation
-|    +-- main.yaml              # Template for the full pipeline and application stack
-+-- .gitignore
-+-- README.md
-```
-
-### <img src="./docs/icons/setup.png" width="30px"/> Setting up the services
-This section discusses the cloud setup that is used as teaching material.
-
-#### Prerequisites
-To run this project you will need the following:
-* `aws-cli` installed
-* Access to an AWS account from the CLI
-* Docker installed
-
-
-This repository can be ran with Docker, more on Docker below!. 
-This script will walk you through the different steps in the process as well as explaining these steps.
-You can overwrite some parameters as environment variable using the `-e` flag.
-```bazaar
-docker build -t demo . && docker run -e BUCKET_NAME=my-bucket -e VPC_ID=my-vpc -e REGION=eu-west-1 demo       # Run the setup!
-```
-
-
-#### Components
-This setup contains a number of resources, which make up both the application stack, infrastructure and deployment resources.
-You will get:
-* An **S3 bucket**, which will be used as the artifact store in CodePipeline, and store for internal use of CloudFormation.
-* An **AWS CodeCommit repository** which holds the Flask application code in it.
-  This may seam strange, because this project lives in GitHub. But as we try to show CI/CD in the AWS ecosystem, we will copy the code into AWS CodeCommit.
-* An **Elastic Container Registry** repository. An ECR repo is a location where you can store container images. Thiis registry will be created with one repository in it, which holds the images for the Flask application.
-* An **ECS Fargate Service**. This service will run the application. Fargate is part of Amazon's Elastic Container Service where you do not manage the underlying EC2 instances that run the containers.
-  The service runs on an **ECS cluster**. An ECS Service, holds a set of **ECS Task**. You can look at an ECS Task as a deployment of containers. A task is specified by an **ECS TaskDefinition**.
-* An **AWS CodePipeline** that manages the building and deployment of the application.
-* A **Public Subnet** where your containers will run. This is public to make the containers accessible.
-* A **Security Group** that will allow TCP traffic to port 5000 and port 80.
-* A **Network Load Balancer** that manages traffic to the application. If you want to un multiple instances of the service, this NLB will distribute the traffic evenly between containers.
-  An TCP **Listener** will forward traffic to the load balancer to the NLB **TargetGroup**. All containers will be registered as targets in the TargetGroup.
-* **IAM roles and policies** necessary to do the deployment
-
-In a picture, this is on a high level the layout of the stack:
-![Architecture overview](docs/architecture.png)
 
 <a name="theory"></a>
 ## <img src="./docs/icons/theory.png" width="30px"/> Theory
@@ -351,6 +291,66 @@ Common steps are:
 * AWS CodeBuild: Build code packages and images
 * AWS CodeDeploy: Used to deploy applications to EC2, ECS, Lambda...
 * AWS CodePipeline: Orchestration service to manage the above services
+
+<a name="example"></a>
+## <img src="./docs/icons/howto.png" width="30px"/> How to use this repository
+
+This project contains an actual setup of AWS infrastructure. 
+It holds code to do a real cloud setup, as well as information about the concepts that are thought
+
+### <img src="./docs/icons/tree.jpeg" width="30px"/> Project layout
+```bazaar
++-- bin                      # Folder that holds executables
+|    +-- run                    # Script to run the setup
+|    +-- teardown               # Script to cleanup AWS resources
++-- code                     # The code of the actual application
+|    +-- api.py                 # The code for the Flask API
+|    +-- buildspec.yml          # The build specifications used by AWS CodeBuild
+|    +-- Dockerfile             # Dockerfile used for the Flask Application
+|    +-- requirements.txt       # Python dependency file
++-- infra                    # AWS CloudFormation scripts (IaC)
+|    +-- bucket.yaml            # Template for the initial bucket used by AWS Cloudformation
+|    +-- main.yaml              # Template for the full pipeline and application stack
++-- .gitignore
++-- README.md
+```
+
+### <img src="./docs/icons/setup.png" width="30px"/> Setting up the services
+This section discusses the cloud setup that is used as teaching material.
+
+#### Prerequisites
+To run this project you will need the following:
+* `aws-cli` installed
+* Access to an AWS account from the CLI
+* Docker installed
+
+
+This repository can be ran with Docker, more on Docker below!. 
+This script will walk you through the different steps in the process as well as explaining these steps.
+You can overwrite some parameters as environment variable using the `-e` flag.
+```bazaar
+docker build -t demo . && docker run -e BUCKET_NAME=my-bucket -e VPC_ID=my-vpc -e REGION=eu-west-1 demo       # Run the setup!
+```
+
+
+#### Components
+This setup contains a number of resources, which make up both the application stack, infrastructure and deployment resources.
+You will get:
+* An **S3 bucket**, which will be used as the artifact store in CodePipeline, and store for internal use of CloudFormation.
+* An **AWS CodeCommit repository** which holds the Flask application code in it.
+  This may seam strange, because this project lives in GitHub. But as we try to show CI/CD in the AWS ecosystem, we will copy the code into AWS CodeCommit.
+* An **Elastic Container Registry** repository. An ECR repo is a location where you can store container images. Thiis registry will be created with one repository in it, which holds the images for the Flask application.
+* An **ECS Fargate Service**. This service will run the application. Fargate is part of Amazon's Elastic Container Service where you do not manage the underlying EC2 instances that run the containers.
+  The service runs on an **ECS cluster**. An ECS Service, holds a set of **ECS Task**. You can look at an ECS Task as a deployment of containers. A task is specified by an **ECS TaskDefinition**.
+* An **AWS CodePipeline** that manages the building and deployment of the application.
+* A **Public Subnet** where your containers will run. This is public to make the containers accessible.
+* A **Security Group** that will allow TCP traffic to port 5000 and port 80.
+* A **Network Load Balancer** that manages traffic to the application. If you want to un multiple instances of the service, this NLB will distribute the traffic evenly between containers.
+  An TCP **Listener** will forward traffic to the load balancer to the NLB **TargetGroup**. All containers will be registered as targets in the TargetGroup.
+* **IAM roles and policies** necessary to do the deployment
+
+In a picture, this is on a high level the layout of the stack:
+![Architecture overview](docs/architecture.png)
 
 <a name="demo"></a>
 ## <img src="./docs/icons/demo.png" width="30px"/> Demo
