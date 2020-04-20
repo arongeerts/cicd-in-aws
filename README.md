@@ -1,6 +1,12 @@
 # <img src="./docs/icons/aws.png" width="30px"/> DevOps on AWS
-This project attempts to give theoretical and practical experience in DevOps in AWS-oriented projects.
+This project attempts to give theoretical and practical experience in DevOps in AWS-oriented projects. 
+It consists of four major parts:
+* An [introduction section](intro), where we will discuss what DevOps means in this context. 
+* Discussion of the [practical example](example) that this repository holds and that you can play around with.
+* A [theory](theory) section, where you can find more information on the concepts that are used in this project.
+* A [demo](demo) section, that allows you to follow the practical example without doing the setup yourself.
 
+<a name="intro"></a>
 ## <img src="./docs/icons/question.png" width="30px"/> What is DevOps?
 ##### Definition (From [Wikipedia, 2020](https://en.wikipedia.org/wiki/DevOps))
 > DevOps is a set of practices that combines software development (Dev) and information-technology operations (Ops) which aims to **shorten the systems development life cycle** and provide **continuous delivery with high software quality**
@@ -15,12 +21,13 @@ In this project, we will interpret DevOps as:
 
 In this project, we will create an example where CodePipeline deploys a Docker container to ECS Fargate. 
 This repo is intended to be used for learning purposes. By this repo, we try to teach about three things:
-* **IaC**: Infrastructure as code with AWS CloudFormation
-* **Docker**: This project runs a Dockerized Flask application
-* **CI/CD**: In this project, an AWS CodePipeline is created which takes care of the entire release cycle.
+* [**IaC**](iac): Infrastructure as code with AWS CloudFormation
+* [**Docker**](docker): This project runs a Dockerized Flask application
+* [**CI/CD**](cicd): In this project, an AWS CodePipeline is created which takes care of the entire release cycle.
 From the source code, this pipeline will build a Docker image, push it to AWS ECR and deploy an ECS Service running on Fargate.
 This container will be reachable from the public internet and can be used to verify the setup.
 
+<a name="example"></a>
 ## <img src="./docs/icons/howto.png" width="30px"/> How to use this repository
 
 This project contains an actual setup of AWS infrastructure. 
@@ -80,6 +87,7 @@ You will get:
 In a picture, this is on a high level the layout of the stack:
 ![Architecture overview](docs/architecture.png)
 
+<a name="theory"></a>
 ## <img src="./docs/icons/theory.png" width="30px"/> Theory
 
 This section will discuss the theory behind the core concepts that we want to discuss:
@@ -87,7 +95,7 @@ This section will discuss the theory behind the core concepts that we want to di
 * Docker
 * Continuous Integration / Continuous Deployment
 
-
+<a name="iac"></a>
 ### <img src="./docs/icons/cf.png" width="30px"/> Infrastructure as code
 
 ##### How to create AWS resources?
@@ -248,6 +256,7 @@ Resources:
 }
 ```
 
+<a name="docker"></a>
 ### <img src="./docs/icons/docker.png" width="30px"/> Docker
 This section explains the theory behind Docker and how it works in practice
 
@@ -320,6 +329,7 @@ Each image is a different version of the application and can be distinguished by
 * Download an image: `docker pull registry/repository:tag`
 * Push an image to a registry: `docker push registry/repository:tag`
 
+<a name="cicd"></a>
 ### <img src="./docs/icons/pipeline.png" width="30px"/> CI/CD
 By Continuous Integration / Continuous deployment, we try to shorten the time that a new feature can be brought to production. 
 This process often goes together with software versioning, automated testing release management... 
@@ -342,7 +352,7 @@ Common steps are:
 * AWS CodeDeploy: Used to deploy applications to EC2, ECS, Lambda...
 * AWS CodePipeline: Orchestration service to manage the above services
 
-
+<a name="demo"></a>
 ## <img src="./docs/icons/demo.png" width="30px"/> Demo
 This section shows what this project hahs to offer you, in case you are not interested in setting it up yourself. It will walk you through a demo using screenshots.
 
