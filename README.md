@@ -1,4 +1,4 @@
-# DevOps on AWS
+# <img src="./docs/icons/aws.png" width="50px"/>DevOps on AWS
 This project attempts to give theoretical and practical experience in DevOps in AWS-oriented projects.
 
 ## What is DevOps?
