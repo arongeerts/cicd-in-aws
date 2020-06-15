@@ -329,7 +329,7 @@ This repository can be ran with Docker, more on Docker below!.
 This script will walk you through the different steps in the process as well as explaining these steps.
 You can overwrite some parameters as environment variable using the `-e` flag.
 ```bazaar
-docker build -t demo . && docker run -v ~/.aws/credentials:/root/aws/credentials -e BUCKET_NAME=my-bucket -e VPC_ID=my-vpc -e REGION=eu-west-1 demo       # Run the setup!
+docker build -t demo . && docker run -v ~/.aws/credentials:/root/.aws/credentials -e BUCKET_NAME=my-bucket -e VPC_ID=my-vpc -e REGION=eu-west-1 demo       # Run the setup!
 ```
 
 

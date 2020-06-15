@@ -2,10 +2,12 @@ FROM python:3
 
 EXPOSE 5000/tcp
 
-WORKDIR /app
+WORKDIR /code
 
-COPY . /app
+COPY . /code
+
+ENV PYTHONPATH /code
 
 RUN pip install -r requirements.txt
 
-ENTRYPOINT [ "python", "api.py"]
+CMD [ "python", "app/api.py"]
